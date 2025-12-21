@@ -219,7 +219,6 @@ export default function GamePage() {
   const [pendingCardIndex, setPendingCardIndex] = useState<number | null>(null)
   const [pendingAction, setPendingAction] = useState<number | null>(null)
   const [isDecrypting, setIsDecrypting] = useState(false)
-  const [isRelayingJoin, setIsRelayingJoin] = useState(false)
   const [isRelayingStart, setIsRelayingStart] = useState(false)
   const [relayerEnabled, setRelayerEnabled] = useState(true)
   const [myHand, setMyHand] = useState<OwnedCard[] | null>(null)
@@ -345,14 +344,6 @@ export default function GamePage() {
   const isMyTurn = Boolean(me && gameData && gameData.playerTurnIdx === me.index)
   const canPlayTurn = Boolean(gameStarted && isMyTurn)
   const canForfeit = Boolean(gameStarted && me)
-  const relayerInGame = players.some(
-    (player) => player.addr.toLowerCase() === RELAYER_ADDRESS.toLowerCase(),
-  )
-  const canRelayJoin =
-    Boolean(gameData) &&
-    gameData.status === 0 &&
-    gameData.playersLeftToJoin > 0 &&
-    !relayerInGame
   const canRelayStart =
     Boolean(gameData) &&
     gameData.status === 0 &&
@@ -641,19 +632,6 @@ export default function GamePage() {
     }
   }
 
-  const handleRelayJoin = async () => {
-    if (!gameId) return
-    setIsRelayingJoin(true)
-    try {
-      const res = await relayGameAction("join", gameId)
-      toast.success("Relayed join sent", { description: res.hash })
-    } catch (err) {
-      toast.error("Relayed join failed", { description: err instanceof Error ? err.message : "Unknown error" })
-    } finally {
-      setIsRelayingJoin(false)
-    }
-  }
-
   const handleRelayStart = async () => {
     if (!gameId) return
     setIsRelayingStart(true)
@@ -667,13 +645,11 @@ export default function GamePage() {
     }
   }
 
-  const joinHandler = relayerEnabled ? handleRelayJoin : handleJoin
+  const joinHandler = handleJoin
   const startHandler = relayerEnabled ? handleRelayStart : handleStart
-  const joinBusy = relayerEnabled ? isRelayingJoin : joinGame.isPending
+  const joinBusy = joinGame.isPending
   const startBusy = relayerEnabled ? isRelayingStart : startGame.isPending
-  const joinDisabled = relayerEnabled
-    ? !canRelayJoin || isRelayingJoin
-    : !isConnected || joinGame.isPending || !canJoin
+  const joinDisabled = !isConnected || joinGame.isPending || !canJoin
   const startDisabled = relayerEnabled
     ? !canRelayStart || isRelayingStart
     : !isConnected || startGame.isPending || !canStart
@@ -1064,14 +1040,12 @@ export default function GamePage() {
                         </Button>
                       </div>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span>Relayer mode</span>
+                        <span>Start via relayer</span>
                         <Switch checked={relayerEnabled} onCheckedChange={setRelayerEnabled} />
                         <span>{relayerEnabled ? "Relayer pays gas" : "Wallet pays gas"}</span>
                       </div>
                       <div className="text-[10px] text-muted-foreground">
-                        {relayerEnabled
-                          ? `Relayer: ${formatAddr(RELAYER_ADDRESS)}`
-                          : "Relayer disabled"}
+                        {relayerEnabled ? `Relayer: ${formatAddr(RELAYER_ADDRESS)}` : "Relayer disabled"}
                       </div>
                     </div>
                   ) : null}
@@ -1221,7 +1195,7 @@ export default function GamePage() {
                       Start game
                     </Button>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span>Relayer mode</span>
+                      <span>Start via relayer</span>
                       <Switch checked={relayerEnabled} onCheckedChange={setRelayerEnabled} />
                       <span>{relayerEnabled ? "Relayer pays gas" : "Wallet pays gas"}</span>
                     </div>
@@ -1517,15 +1491,15 @@ export default function GamePage() {
                       </Button>
                     </div>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span>Relayer mode</span>
+                      <span>Start via relayer</span>
                       <Switch checked={relayerEnabled} onCheckedChange={setRelayerEnabled} />
                       <span>{relayerEnabled ? "Relayer pays gas" : "Wallet pays gas"}</span>
                     </div>
                   </div>
                   <div className="text-xs text-muted-foreground">
                     {relayerEnabled
-                      ? `Relayer: ${formatAddr(RELAYER_ADDRESS)} (joins as this address)`
-                      : "Relayer disabled. Use your wallet to send join/start."}
+                      ? `Relayer: ${formatAddr(RELAYER_ADDRESS)} (start only)`
+                      : "Relayer disabled. Use your wallet to start."}
                   </div>
                 </>
               ) : null}
