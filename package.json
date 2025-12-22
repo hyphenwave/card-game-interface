@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "TURBOPACK=0 NEXT_PRIVATE_BUILD_WITH_TURBOPACK=0 NEXT_TELEMETRY_DISABLED=1 next build",
+    "build": "NEXT_TELEMETRY_DISABLED=1 next build --webpack",
     "dev": "next dev --webpack",
     "lint": "eslint .",
     "start": "next start"

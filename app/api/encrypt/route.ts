@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { createInstance, SepoliaConfig } from "@zama-fhe/relayer-sdk/web"
+import { createInstance, SepoliaConfig } from "@zama-fhe/relayer-sdk/node"
 import { WHOT_DECK } from "@/lib/cards"
 import { env } from "@/lib/env"
 import { getContracts } from "@/config/contracts"

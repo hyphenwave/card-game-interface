@@ -131,8 +131,8 @@ export function WhotCard({
   return (
     <div
       className={cn(
-        "relative select-none overflow-hidden rounded-[6px] bg-card shadow-sm transition-transform hover:scale-105",
-        "aspect-[197/312] w-full",
+        "relative select-none overflow-hidden rounded-[6px] bg-card transition-transform hover:scale-105",
+        "aspect-[197/312] w-full border border-black/5 shadow-sm",
         faded && "opacity-80",
         className
       )}
@@ -187,13 +187,12 @@ export function WhotCard({
           ) : null}
         </svg>
       )}
-      {variant === "back" || !isWhot ? (
-        <WhotSprite
-          id={WHOT_FRAME_ID}
-          viewBox={WHOT_FRAME_VIEWBOX}
-          className="pointer-events-none absolute inset-0"
-        />
-      ) : null}
+      {/* Always render frame to ensure consistent border alignment */}
+      <WhotSprite
+        id={WHOT_FRAME_ID}
+        viewBox={WHOT_FRAME_VIEWBOX}
+        className="pointer-events-none absolute inset-0 mix-blend-multiply opacity-60"
+      />
     </div>
   )
 }

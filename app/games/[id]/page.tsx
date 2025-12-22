@@ -1664,7 +1664,7 @@ export default function GamePage() {
                 </div>
 
                 {shouldShowWishShape ? (
-                  <div className="mt-3 rounded-2xl border border-border bg-secondary/40 p-3">
+                  <div className="relative z-30 mt-3 rounded-2xl border border-border bg-secondary/95 p-4 shadow-2xl backdrop-blur-sm animate-in fade-in slide-in-from-bottom-2">
                     <div className="text-xs font-medium text-muted-foreground">Whot wish</div>
                     <div className="text-xs text-muted-foreground">
                       Choose a shape for {selectedCard?.label ?? "Whot-20"}.

@@ -155,11 +155,12 @@ export function NewHome() {
   }, [showCreate])
 
   return (
-    <div className="min-h-[100svh] bg-gradient-to-b from-background to-secondary/30 text-foreground flex flex-col">
+    <div className="min-h-[100svh] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/20 via-background to-background text-foreground flex flex-col">
+       <div className="fixed inset-0 -z-10 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]" />
        <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto flex h-14 items-center justify-between px-4">
           <div className="flex items-center gap-2 font-bold text-primary">
-            <span className="text-xl">Whot!</span>
+            <span className="text-xl">Whot</span>
           </div>
           <div className="flex items-center gap-2">
             {isMounted ? <CustomConnectButton /> : null}
@@ -264,9 +265,9 @@ export function NewHome() {
 
         {/* Create Game Modal / Section */}
         {showCreate && (
-             <section id="create-game-section" className="mx-auto max-w-lg animate-in zoom-in-95 duration-300">
-               <Card className="border-primary/20 shadow-xl overflow-hidden backdrop-blur supports-[backdrop-filter]:bg-background/80 relative">
-                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent opacity-50" />
+             <section id="create-game-section" className="mx-auto max-w-lg animate-in zoom-in-95 duration-500">
+               <Card className="border-white/10 bg-white/5 shadow-2xl backdrop-blur-md supports-[backdrop-filter]:bg-white/5 relative overflow-hidden">
+                 <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 via-transparent to-transparent pointer-events-none" />
                  <CardHeader>
                    <CardTitle>Create Game</CardTitle>
                    <CardDescription>Setup a new encrypted game lobby</CardDescription>
@@ -370,18 +371,19 @@ export function NewHome() {
                 ) : games.length > 0 ? (
                     games.map((game) => (
                         <Link key={game.gameId.toString()} href={`/games/${game.gameId.toString()}`}>
-                            <Card className="group relative overflow-hidden transition-all hover:shadow-lg hover:border-primary/40 hover:-translate-y-1">
-                                <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                                    <Sparkles className="h-20 w-20 text-primary -rotate-12 translate-x-4 -translate-y-4" />
+                            <Card className="group relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 border-white/5 bg-white/5 backdrop-blur-sm">
+                                <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <div className="absolute top-0 right-0 p-3 opacity-5 group-hover:opacity-20 transition-opacity duration-500">
+                                    <Sparkles className="h-24 w-24 text-primary -rotate-12 translate-x-8 -translate-y-8" />
                                 </div>
-                                <CardHeader className="pb-3">
-                                    <div className="flex justify-between items-start">
-                                        <Badge variant={game.status === 1 ? "default" : "secondary"}>
-                                            {statusLabel[game.status] ?? "Unknown"}
-                                        </Badge>
-                                        <span className="text-xs font-mono text-muted-foreground">#{game.gameId.toString()}</span>
-                                    </div>
-                                    <CardTitle className="text-lg pt-2 flex items-center gap-2">
+                                    <CardHeader className="pb-2">
+                                        <div className="flex justify-between items-center">
+                                            <Badge variant={game.status === 1 ? "default" : "secondary"}>
+                                                {statusLabel[game.status] ?? "Unknown"}
+                                            </Badge>
+                                            <span className="text-xl font-bold font-mono text-foreground/80">#{game.gameId.toString()}</span>
+                                        </div>
+                                        <CardTitle className="text-lg pt-0 flex items-center gap-2">
                                         Game Room 
                                         <span className="text-muted-foreground font-normal text-sm items-center flex gap-1">
                                             <Users className="h-3 w-3" /> {game.playersJoined}/{game.maxPlayers}

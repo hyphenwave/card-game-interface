@@ -9,6 +9,8 @@ const nextConfig = {
     unoptimized: true,
   },
   serverExternalPackages: [
+    "@zama-fhe/relayer-sdk",
+    "@zama-fhe/relayer-sdk/node",
     "@walletconnect/ethereum-provider",
     "@walletconnect/universal-provider",
     "pino",
@@ -20,6 +22,14 @@ const nextConfig = {
     "why-is-node-running",
   ],
   webpack: (config, { isServer }) => {
+    config.resolve.alias = {
+      ...(config.resolve.alias || {}),
+      "thread-stream": path.resolve("./lib/empty.js"),
+      "pino-pretty": path.resolve("./lib/empty.js"),
+      "pino-std-serializers": path.resolve("./lib/empty.js"),
+      "sonic-boom": path.resolve("./lib/empty.js"),
+      "@react-native-async-storage/async-storage": path.resolve("./lib/empty.js"),
+    }
     if (!isServer) {
       // Inject global polyfill as the first entry point
       const originalEntry = config.entry;
@@ -41,9 +51,15 @@ const nextConfig = {
       // Add fallback for node modules
       config.resolve.fallback = {
         ...config.resolve.fallback,
+        pino: false,
         fs: false,
         net: false,
         tls: false,
+      }
+
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        pino: "pino/browser",
       }
     }
     return config

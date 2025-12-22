@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 const UI_MODE_KEY = "whot-ui-mode"
 
 export default function Page() {
-  const [uiMode, setUiMode] = useState<"classic" | "new">("classic")
+  const [uiMode, setUiMode] = useState<"classic" | "new">("new")
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
