@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
-import { ArrowLeft, ArrowRight, Loader2, Plus, Settings, RotateCcw } from "lucide-react"
+import { ArrowLeft, ArrowRight, Loader2, Plus, Settings } from "lucide-react"
 import { toast } from "sonner"
 import { useAccount, useConnect, usePublicClient } from "wagmi"
 
@@ -11,15 +11,15 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Switch } from "@/components/ui/switch"
 import { describeCard } from "@/lib/cards"
 import { useCardGameActions } from "@/hooks/useCardGameActions"
 import { exportBurner, importBurnerPrivateKey, regenerateBurnerAccount } from "@/lib/burner"
 import { CustomConnectButton } from "@/components/custom-connect-button"
-import { CopyToClipboard } from "@/components/ui/copy-to-clipboard"
+import { SettingsPopover } from "@/components/home/SettingsPopover"
 import { activeChain } from "@/config/web3Shared"
 import { useGameFeed } from "@/hooks/useGameFeed"
+import { useRuleEnforcement } from "@/lib/uiSettings"
 
 const statusLabel: Record<number, string> = {
   0: "Open",
@@ -61,6 +61,7 @@ export function ClassicHome() {
   const isBurnerConnected = Boolean(
     address && burnerAddress && address.toLowerCase() === burnerAddress.toLowerCase(),
   )
+  const { enabled: enforceRules, setEnabled: setEnforceRules } = useRuleEnforcement()
 
   useEffect(() => setIsMounted(true), [])
 
@@ -154,58 +155,25 @@ export function ClassicHome() {
           <div className="flex w-full flex-wrap items-center justify-center gap-2 sm:justify-end">
             <div className="flex flex-wrap items-center gap-2">
               {isMounted ? <CustomConnectButton /> : null}
-              <Popover>
-                <PopoverTrigger asChild>
+              <SettingsPopover
+                trigger={
                   <Button variant="outline" size="icon">
                     <Settings className="h-4 w-4" />
                   </Button>
-                </PopoverTrigger>
-                <PopoverContent align="end" className="w-64 space-y-2">
-                  <div className="text-sm font-medium">Burner wallet</div>
-                  <p className="text-xs text-muted-foreground">Stored locally for quick joins.</p>
-                  <div className="space-y-1 rounded-md border bg-secondary/40 p-2 text-xs">
-                    <div className="flex items-center justify-between gap-2">
-                      <span>Burner: {formatAddr(burnerAddress)}</span>
-                      {burnerAddress ? <CopyToClipboard text={burnerAddress} /> : null}
-                    </div>
-                    <div className="text-muted-foreground">
-                      Active: {formatAddr(address ?? "") || "—"}
-                      {isBurnerConnected ? " (burner)" : ""}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="secondary" size="sm" className="flex-1" onClick={handleBurnerConnect}>
-                      Use burner
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={handleResetBurner}
-                      title="Reset burner wallet"
-                    >
-                      <RotateCcw className="h-4 w-4 text-muted-foreground" />
-                    </Button>
-                  </div>
-                  <Button variant="outline" size="sm" onClick={handleCopyBurner}>
-                    Copy key
-                  </Button>
-                  <div className="space-y-1 pt-2">
-                    <div className="text-xs font-medium text-muted-foreground">Import private key</div>
-                    <div className="flex gap-2">
-                      <Input
-                        value={burnerPk}
-                        onChange={(e) => setBurnerPk(e.target.value)}
-                        placeholder="0x..."
-                        className="text-xs"
-                      />
-                      <Button size="sm" variant="outline" onClick={handleImportBurner}>
-                        Save
-                      </Button>
-                    </div>
-                  </div>
-                </PopoverContent>
-              </Popover>
+                }
+                enforceRules={enforceRules}
+                setEnforceRules={setEnforceRules}
+                burnerAddress={burnerAddress}
+                activeAddress={address ?? ""}
+                isBurnerConnected={isBurnerConnected}
+                onUseBurner={handleBurnerConnect}
+                onResetBurner={handleResetBurner}
+                onCopyBurner={handleCopyBurner}
+                burnerPk={burnerPk}
+                setBurnerPk={setBurnerPk}
+                onImportBurner={handleImportBurner}
+                formatAddr={formatAddr}
+              />
             </div>
           </div>
           <div className="flex flex-col items-center gap-2 text-center">

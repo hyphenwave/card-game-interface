@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
-import { ArrowRight, Loader2, Plus, Sparkles, Trophy, Users, Settings, RotateCcw } from "lucide-react"
+import { ArrowRight, Loader2, Plus, Sparkles, Trophy, Users, Settings } from "lucide-react"
 import { toast } from "sonner"
 import { useAccount, useConnect, usePublicClient } from "wagmi"
 
@@ -18,9 +18,9 @@ import { activeChain } from "@/config/web3Shared"
 import { useGameFeed } from "@/hooks/useGameFeed"
 import { WhotCard } from "@/components/whot-card"
 import { CustomConnectButton } from "@/components/custom-connect-button"
-import { CopyToClipboard } from "@/components/ui/copy-to-clipboard"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { SettingsPopover } from "@/components/home/SettingsPopover"
 import { exportBurner, importBurnerPrivateKey, regenerateBurnerAccount } from "@/lib/burner"
+import { useRuleEnforcement } from "@/lib/uiSettings"
 
 const statusLabel: Record<number, string> = {
   0: "Open",
@@ -67,6 +67,7 @@ export function NewHome() {
   const isBurnerConnected = Boolean(
     address && burnerAddress && address.toLowerCase() === burnerAddress.toLowerCase(),
   )
+  const { enabled: enforceRules, setEnabled: setEnforceRules } = useRuleEnforcement()
 
   useEffect(() => setIsMounted(true), [])
 
@@ -166,64 +167,31 @@ export function NewHome() {
        <div className="fixed inset-0 -z-10 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]" />
        <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto flex h-14 items-center justify-between px-4">
-          <div className="flex items-center gap-2 font-bold text-primary">
+          <div className="flex items-center gap-2 font-bold">
             <img src="/icon.svg" alt="Whot" className="h-8 w-8" />
-            <span className="text-xl hidden sm:inline-block">Whot</span>
+            <span className="text-xl hidden sm:inline-block" style={{ color: '#8b2037' }}>Whot</span>
           </div>
           <div className="flex items-center gap-2">
             {isMounted ? <CustomConnectButton /> : null}
-            <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <Settings className="h-5 w-5" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent align="end" className="w-64 space-y-2">
-                  <div className="text-sm font-medium">Burner wallet</div>
-                  <p className="text-xs text-muted-foreground">Stored locally for quick joins.</p>
-                  <div className="space-y-1 rounded-md border bg-secondary/40 p-2 text-xs">
-                    <div className="flex items-center justify-between gap-2">
-                      <span>Burner: {formatAddr(burnerAddress)}</span>
-                      {burnerAddress ? <CopyToClipboard text={burnerAddress} /> : null}
-                    </div>
-                    <div className="text-muted-foreground">
-                      Active: {formatAddr(address ?? "") || "—"}
-                      {isBurnerConnected ? " (burner)" : ""}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="secondary" size="sm" className="flex-1" onClick={handleBurnerConnect}>
-                      Use burner
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={handleResetBurner}
-                      title="Reset burner wallet"
-                    >
-                      <RotateCcw className="h-4 w-4 text-muted-foreground" />
-                    </Button>
-                  </div>
-                  <Button variant="outline" size="sm" onClick={handleCopyBurner}>
-                    Copy key
-                  </Button>
-                  <div className="space-y-1 pt-2">
-                    <div className="text-xs font-medium text-muted-foreground">Import private key</div>
-                    <div className="flex gap-2">
-                      <Input
-                        value={burnerPk}
-                        onChange={(e) => setBurnerPk(e.target.value)}
-                        placeholder="0x..."
-                        className="text-xs"
-                      />
-                      <Button size="sm" variant="outline" onClick={handleImportBurner}>
-                        Save
-                      </Button>
-                    </div>
-                  </div>
-                </PopoverContent>
-              </Popover>
+            <SettingsPopover
+              trigger={
+                <Button variant="ghost" size="icon">
+                  <Settings className="h-5 w-5" />
+                </Button>
+              }
+              enforceRules={enforceRules}
+              setEnforceRules={setEnforceRules}
+              burnerAddress={burnerAddress}
+              activeAddress={address ?? ""}
+              isBurnerConnected={isBurnerConnected}
+              onUseBurner={handleBurnerConnect}
+              onResetBurner={handleResetBurner}
+              onCopyBurner={handleCopyBurner}
+              burnerPk={burnerPk}
+              setBurnerPk={setBurnerPk}
+              onImportBurner={handleImportBurner}
+              formatAddr={formatAddr}
+            />
           </div>
         </div>
       </header>
@@ -250,8 +218,8 @@ export function NewHome() {
                     <WhotCard variant="back" className="w-32 shadow-none rounded-[8px]" />
                 </div>
              </div>
-             <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
-                Whot On-Chain
+             <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl" style={{ color: '#8b2037' }}>
+                Whot
               </h1>
               <p className="mt-4 max-w-[42rem] leading-normal text-muted-foreground sm:text-xl sm:leading-8 mx-auto">
                 The classic card game, fully encrypted and decentralized on Ethereum. 
@@ -447,7 +415,7 @@ export function NewHome() {
       </main>
 
       <footer className="border-t border-border/50 py-6 text-center text-xs text-muted-foreground">
-         <p>© 2025 Whot On-Chain • Powered by Zama FHE</p>
+         <p>© 2025 Whot • Powered by Zama FHE</p>
       </footer>
     </div>
   )

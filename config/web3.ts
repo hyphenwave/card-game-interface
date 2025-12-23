@@ -27,11 +27,11 @@ export const createWagmiConfig = (options: { burnerAccount?: Account | null } = 
         () => rainbowWallet({ chains: [activeChain], projectId: walletConnectProjectId }),
         () => rabbyWallet({ chains: [activeChain] }),
         () => walletConnectWallet({ chains: [activeChain], projectId: walletConnectProjectId }),
-        () => coinbaseWallet({ chains: [activeChain], appName: "Whot On-Chain" }),
+        () => coinbaseWallet({ chains: [activeChain], appName: "Whot" }),
       ],
     },
   ], {
-    appName: "Whot On-Chain",
+    appName: "Whot",
     projectId: walletConnectProjectId,
   })
 

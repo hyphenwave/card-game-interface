@@ -40,6 +40,13 @@ export const describeCard = (card: number): string => {
   return `${shape} ${num}`;
 };
 
+export const matchesCallCard = (callCard: number, card: OwnedCard): boolean => {
+  if (!callCard) return true;
+  const callShape = cardShape(callCard);
+  const callNumber = cardNumber(callCard);
+  return card.number === callNumber || card.shape === callShape || card.number === 20;
+};
+
 export const decodeDeckMap = (deckMap: bigint | number | Hex): DeckMapShape => {
   const raw = BigInt(deckMap ?? 0);
   const mapBits = raw >> 2n;

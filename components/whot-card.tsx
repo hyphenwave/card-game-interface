@@ -187,12 +187,7 @@ export function WhotCard({
           ) : null}
         </svg>
       )}
-      {/* Always render frame to ensure consistent border alignment */}
-      <WhotSprite
-        id={WHOT_FRAME_ID}
-        viewBox={WHOT_FRAME_VIEWBOX}
-        className="pointer-events-none absolute inset-0 mix-blend-multiply opacity-60"
-      />
+
     </div>
   )
 }

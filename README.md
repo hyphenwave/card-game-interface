@@ -1,4 +1,4 @@
-# Whot On-Chain
+# Whot
 
 A fully decentralized, encrypted version of the classic Whot card game, built on Ethereum using Zama FHE (Fully Homomorphic Encryption).
 

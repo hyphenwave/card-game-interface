@@ -6,7 +6,7 @@ import './globals.css'
 import { Providers } from './providers'
 
 export const metadata: Metadata = {
-  title: 'Whot On-Chain',
+  title: 'Whot',
   description: 'A fully on-chain implementation of the classic Whot card game, powered by Zama FHE.',
   icons: {
     icon: '/icon.svg',

@@ -14,6 +14,7 @@ import { getStorageAtBalanced, readContractBalanced } from "@/lib/rpcPool"
 const GAME_DATA_SLOT = 2n
 const GAME_ID_SLOT = 1n
 const PLAYER_DATA_OFFSET = 4n
+const COMMITMENT_SLOT = 0n
 
 const ADDRESS_MASK = (1n << 160n) - 1n
 const U64_MASK = (1n << 64n) - 1n
@@ -128,6 +129,16 @@ export const gameDataSlot = (gameId: bigint) =>
         [gameId, GAME_DATA_SLOT],
       ),
     ),
+)
+
+export const commitmentSlot = (gameId: bigint) =>
+  BigInt(
+    keccak256(
+      encodeAbiParameters(
+        [{ type: "uint256" }, { type: "uint256" }],
+        [gameId, COMMITMENT_SLOT],
+      ),
+    ),
   )
 
 export const playerDataSlot = (gameId: bigint, playerIndex: bigint) => {
@@ -182,9 +193,10 @@ export const decodePlayerData = (
 ): PlayerDataView => {
   const playerAddr = toAddress(loadBits(raw0, 0n, ADDRESS_MASK))
   const deckMap = loadBits(raw0, 160n, U64_MASK)
-  const pendingAction = Number(loadBits(raw0, 168n, U8_MASK))
-  const score = Number(loadBits(raw0, 176n, U16_MASK))
-  const forfeited = loadBits(raw0, 184n, U8_MASK) !== 0n
+  // After deckMap (64 bits at 160), pendingAction starts at 224
+  const pendingAction = Number(loadBits(raw0, 224n, U8_MASK))
+  const score = Number(loadBits(raw0, 232n, U16_MASK))
+  const forfeited = loadBits(raw0, 248n, U8_MASK) !== 0n
   return {
     playerAddr,
     deckMap,
@@ -215,6 +227,22 @@ export const readGameData = async (
     raw1 = values[1] ?? 0n
   }
   return decodeGameData(raw0 ?? 0n, raw1 ?? 0n)
+}
+
+export const readCommitmentHash = async (
+  client: PublicClient,
+  cardEngine: Address,
+  gameId: bigint,
+) => {
+  const slot = commitmentSlot(gameId)
+  try {
+    const raw = await readExtsload(client, cardEngine, [slot, 1n])
+    const [value] = raw as readonly bigint[]
+    return value ?? 0n
+  } catch {
+    const [value] = await readStorageSlots(client, cardEngine, [slot])
+    return value ?? 0n
+  }
 }
 
 export const readNextGameId = async (
