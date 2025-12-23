@@ -53,14 +53,27 @@ export function CustomConnectButton() {
             }
           >
             {!connected ? (
-              <Button onClick={openConnectModal}>Connect Wallet</Button>
+              <Button
+                onClick={openConnectModal}
+                className="h-9 px-3 text-xs sm:h-10 sm:px-4 sm:text-sm"
+              >
+                Connect Wallet
+              </Button>
             ) : chain?.unsupported ? (
-              <Button variant="destructive" onClick={openChainModal}>
+              <Button
+                variant="destructive"
+                onClick={openChainModal}
+                className="h-9 px-3 text-xs sm:h-10 sm:px-4 sm:text-sm"
+              >
                 Wrong network
               </Button>
             ) : (
-              <div className="flex items-center gap-2">
-                <Button variant="outline" onClick={openChainModal} className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  variant="outline"
+                  onClick={openChainModal}
+                  className="flex h-9 min-w-0 max-w-[48vw] items-center gap-2 px-3 text-xs sm:h-10 sm:max-w-none sm:px-4 sm:text-sm"
+                >
                   {chain?.hasIcon ? (
                     <span
                       className="h-4 w-4 overflow-hidden rounded-full bg-secondary"
@@ -69,10 +82,13 @@ export function CustomConnectButton() {
                       {chain.iconUrl ? <img alt={chain.name ?? "chain"} src={chain.iconUrl} className="h-4 w-4" /> : null}
                     </span>
                   ) : null}
-                  <span>{chain?.name ?? "Network"}</span>
+                  <span className="truncate">{chain?.name ?? "Network"}</span>
                 </Button>
-                <Button onClick={openAccountModal} className="flex items-center gap-2">
-                  <span>{label}</span>
+                <Button
+                  onClick={openAccountModal}
+                  className="flex h-9 min-w-0 max-w-[58vw] items-center gap-2 px-3 text-xs sm:h-10 sm:max-w-none sm:px-4 sm:text-sm"
+                >
+                  <span className="truncate">{label}</span>
                   <BalanceLabel address={account?.address as Address | undefined} fallback={account?.displayBalance} />
                 </Button>
               </div>
@@ -100,5 +116,5 @@ function BalanceLabel({ address, fallback }: { address?: Address; fallback?: str
   }, [balance])
 
   if (!formattedBalance && !fallback) return null
-  return <span className="text-xs text-muted-foreground">{formattedBalance ?? fallback}</span>
+  return <span className="text-[10px] text-muted-foreground sm:text-xs">{formattedBalance ?? fallback}</span>
 }

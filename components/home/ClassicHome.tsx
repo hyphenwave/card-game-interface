@@ -149,10 +149,10 @@ export function ClassicHome() {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
-      <main className="mx-auto flex w-full max-w-[67.5vw] flex-1 flex-col items-center gap-6 px-4 py-14 md:max-w-[56.25vw] lg:max-w-[45vw] xl:max-w-[37.5vw]">
+      <main className="mx-auto flex w-full max-w-full flex-1 flex-col items-center gap-6 px-4 py-10 sm:max-w-[67.5vw] sm:py-14 md:max-w-[56.25vw] lg:max-w-[45vw] xl:max-w-[37.5vw]">
         <header className="flex w-full flex-col gap-3">
-          <div className="flex items-center justify-end">
-            <div className="flex items-center gap-2">
+          <div className="flex w-full flex-wrap items-center justify-center gap-2 sm:justify-end">
+            <div className="flex flex-wrap items-center gap-2">
               {isMounted ? <CustomConnectButton /> : null}
               <Popover>
                 <PopoverTrigger asChild>
@@ -208,8 +208,11 @@ export function ClassicHome() {
               </Popover>
             </div>
           </div>
-          <div className="flex flex-col items-center gap-1 text-center">
-            <h1 className="text-3xl font-semibold text-primary">Whot On-Chain</h1>
+          <div className="flex flex-col items-center gap-2 text-center">
+            <div className="flex items-center justify-center gap-2">
+              <img src="/icon.svg" alt="Whot" className="h-8 w-8" />
+              <h1 className="text-3xl font-semibold text-primary">Whot On-Chain</h1>
+            </div>
             <p className="text-muted-foreground text-sm">Encrypted • Fair • On-Chain</p>
           </div>
         </header>
@@ -251,9 +254,18 @@ export function ClassicHome() {
                       </div>
                     )}
                   </div>
-                  <div className="flex gap-2">
-                    <Input value={joinId} onChange={(e) => setJoinId(e.target.value)} placeholder="Game ID" />
-                    <Button onClick={handleJoin} disabled={!canTransact || joinGame.isPending}>
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <Input
+                      value={joinId}
+                      onChange={(e) => setJoinId(e.target.value)}
+                      placeholder="Game ID"
+                      className="flex-1"
+                    />
+                    <Button
+                      onClick={handleJoin}
+                      disabled={!canTransact || joinGame.isPending}
+                      className="w-full sm:w-auto"
+                    >
                       {joinGame.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Join"}
                     </Button>
                   </div>
@@ -288,7 +300,7 @@ export function ClassicHome() {
                 <CardDescription>WhotManager pulls encrypted decks from the trusted shuffle service.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div>
                     <label className="text-xs font-medium text-muted-foreground">Max players</label>
                     <Input
@@ -337,6 +349,7 @@ export function ClassicHome() {
                           value={player}
                           onChange={(e) => updatePlayer(idx, e.target.value)}
                           placeholder="0x..."
+                          className="flex-1"
                         />
                         {proposedPlayers.length > 1 ? (
                           <Button
@@ -375,12 +388,12 @@ export function ClassicHome() {
         </section>
 
         <section className="w-full space-y-3">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-lg font-semibold">Game feed</h2>
               <p className="text-muted-foreground text-sm">Pulled from on-chain storage.</p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {isFetching ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /> : null}
               <Badge variant="outline">{games.length} games</Badge>
               <Button variant="ghost" size="sm" onClick={() => setShowFeed((v) => !v)}>

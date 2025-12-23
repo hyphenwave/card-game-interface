@@ -1893,10 +1893,10 @@ export default function GamePage() {
                 key={p.index}
                 className="flex flex-col gap-2 rounded-lg border p-3 text-sm"
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
                     <Badge variant="outline">#{p.index}</Badge>
-                    <span className="font-medium">
+                    <span className="font-medium break-all text-xs sm:break-normal sm:text-sm">
                       {p.addr.toLowerCase() === ZERO_ADDRESS ? "Empty slot" : p.addr}
                     </span>
                     {p.forfeited ? <Badge variant="destructive">Forfeited</Badge> : null}
