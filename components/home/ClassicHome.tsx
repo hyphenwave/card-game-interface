@@ -43,14 +43,8 @@ export function ClassicHome() {
   const chainId = publicClient?.chain?.id ?? activeChain.id
   const queryClient = useQueryClient()
 
-  // Use the extracted hook
-  const { 
-    data: indexedGames = [], 
-    isFetching, 
-    isError, 
-    error 
-  } = useGameFeed(publicClient)
-  
+  const { data: indexedGames = [], isFetching, isError, error } = useGameFeed(publicClient)
+
   const games = useMemo(() => indexedGames, [indexedGames])
 
   const [proposedPlayers, setProposedPlayers] = useState<string[]>([""])
@@ -94,7 +88,6 @@ export function ClassicHome() {
     await navigator.clipboard.writeText(data.privateKey)
     toast.success("Burner key copied")
   }
-
 
   const handleImportBurner = () => {
     try {
@@ -385,9 +378,7 @@ export function ClassicHome() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-lg font-semibold">Game feed</h2>
-              <p className="text-muted-foreground text-sm">
-                Pulled from on-chain storage.
-              </p>
+              <p className="text-muted-foreground text-sm">Pulled from on-chain storage.</p>
             </div>
             <div className="flex items-center gap-2">
               {isFetching ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /> : null}
@@ -430,14 +421,14 @@ export function ClassicHome() {
                       </div>
                       <div className="text-muted-foreground text-xs flex flex-wrap items-center gap-2">
                         <span>Market: {game.marketCount}</span>
-                        <span>Seats: {game.playersJoined}/{game.maxPlayers}</span>
+                        <span>
+                          Seats: {game.playersJoined}/{game.maxPlayers}
+                        </span>
                       </div>
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <div className="text-muted-foreground">
-                        {isMounted && game.lastMove
-                          ? `Last activity few moments ago`
-                          : "Activity pending"}
+                        {isMounted && game.lastMove ? `Last activity few moments ago` : "Activity pending"}
                       </div>
                       <div className="flex gap-2">
                         <Link href={`/games/${game.gameId.toString()}`}>

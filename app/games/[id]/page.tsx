@@ -205,11 +205,11 @@ const CardFan = ({ count, faded = false }: { count: number; faded?: boolean }) =
   const displayCount = clamp(count || 1, 1, 7)
   const angles = buildFanAngles(displayCount)
   return (
-    <div className="relative h-24 w-40">
+    <div className="relative h-20 w-32 sm:h-24 sm:w-40">
       {angles.map((angle, idx) => (
         <div
           key={`fan-${idx}`}
-          className="absolute left-[42%] bottom-0 h-20 w-14 origin-bottom shadow-sm transition-all duration-300 hover:-translate-y-2"
+          className="absolute left-[42%] bottom-0 h-16 w-12 origin-bottom shadow-sm transition-all duration-300 hover:-translate-y-2 sm:h-20 sm:w-14"
           style={{ 
             transform: `translateX(-50%) rotate(${angle}deg) translateY(${Math.abs(angle) / 4}px)`,
             zIndex: idx 
@@ -253,7 +253,7 @@ const HandFan = ({
   return (
     <div className="flex h-full items-end justify-center overflow-hidden">
       <div
-        className="relative h-40 w-full max-w-3xl origin-bottom scale-[0.65] sm:scale-100 transition-transform"
+        className="relative h-32 w-full max-w-2xl origin-bottom scale-[0.6] transition-transform sm:h-40 sm:max-w-3xl sm:scale-100"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => {
           setIsHovered(false)
@@ -287,7 +287,7 @@ const HandFan = ({
               onFocus={() => setHoveredIndex(card.index)}
               onBlur={() => setHoveredIndex(null)}
               title={`Commit ${actionLabel} with idx ${card.index}`}
-              className={`group absolute left-1/2 bottom-0 h-28 w-20 origin-bottom rounded-xl p-1 transition-[transform,opacity] duration-500 ease-out will-change-transform ${
+              className={`group absolute left-1/2 bottom-0 h-24 w-16 origin-bottom rounded-xl p-1 transition-[transform,opacity] duration-500 ease-out will-change-transform sm:h-28 sm:w-20 ${
                 pendingIndex === card.index ? "ring-2 ring-primary" : "ring-1 ring-border"
               } ${canSelect ? "cursor-pointer" : "cursor-not-allowed"}`}
               style={{
@@ -328,14 +328,14 @@ const MarketDeckFan = ({
       onClick={onDraw}
       disabled={!canDraw}
       title={canDraw ? "Draw from market" : "Draw on your turn"}
-      className={`group relative h-24 w-28 transition ${
+      className={`group relative h-20 w-24 transition sm:h-24 sm:w-28 ${
         canDraw ? "cursor-pointer" : "cursor-not-allowed opacity-60"
       }`}
     >
       {angles.map((angle, idx) => (
         <div
           key={`market-${idx}`}
-          className="absolute left-1/2 bottom-0 h-20 w-14 origin-bottom shadow-sm transition-all duration-300 group-hover:-translate-y-1"
+          className="absolute left-1/2 bottom-0 h-16 w-12 origin-bottom shadow-sm transition-all duration-300 group-hover:-translate-y-1 sm:h-20 sm:w-14"
           style={{
             transform: `translateX(-50%) rotate(${angle}deg) translateY(${Math.abs(angle) / 5}px)`,
             zIndex: idx,
@@ -997,15 +997,29 @@ export default function GamePage() {
 
   return (
     <div
-      className={`mx-auto flex max-w-5xl flex-col px-4 ${
-        viewMode === "fun" ? "h-[100svh] overflow-hidden gap-3 py-4" : "gap-4 py-6"
+      className={`mx-auto flex max-w-5xl flex-col px-3 sm:px-4 ${
+        viewMode === "fun"
+          ? "min-h-[100svh] gap-3 py-3 sm:h-[100svh] sm:overflow-hidden sm:py-4"
+          : "gap-4 py-6"
       }`}
     >
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div
+        className={`flex items-center justify-between gap-3 ${
+          viewMode === "fun"
+            ? "flex-col items-start sm:flex-row sm:items-center sm:justify-between"
+            : "flex-wrap"
+        }`}
+      >
         <Link href="/" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" /> Back to lobby
         </Link>
-        <div className="flex flex-wrap items-center gap-2">
+        <div
+          className={`flex items-center gap-2 ${
+            viewMode === "fun"
+              ? "w-full flex-nowrap overflow-x-auto pb-1 sm:w-auto sm:flex-wrap sm:overflow-visible sm:pb-0"
+              : "flex-wrap"
+          }`}
+        >
           {isMounted ? <CustomConnectButton /> : null}
           <div className="flex rounded-full border bg-secondary/60 p-1">
             <Button
@@ -1040,7 +1054,7 @@ export default function GamePage() {
       </div>
 
       {viewMode === "fun" ? (
-        <div className="flex flex-1 min-h-0 flex-col rounded-3xl border border-border bg-card p-4 shadow-sm">
+        <div className="flex flex-1 min-h-0 flex-col rounded-2xl border border-border bg-card p-3 shadow-sm sm:rounded-3xl sm:p-4">
 
           {loadingGame ? (
             <div className="mt-6 flex items-center gap-2 text-sm text-muted-foreground">
@@ -1051,9 +1065,9 @@ export default function GamePage() {
               No game data found.
             </div>
           ) : isSpectator ? (
-            <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-3">
-              <div className="flex min-h-0 flex-col gap-4 lg:col-span-2">
-                <div className="rounded-3xl border bg-white p-4 shadow-sm">
+            <div className="grid min-h-0 flex-1 gap-3 sm:gap-4 lg:grid-cols-3">
+              <div className="flex min-h-0 flex-col gap-3 sm:gap-4 lg:col-span-2">
+                <div className="rounded-2xl border bg-white p-3 shadow-sm sm:rounded-3xl sm:p-4">
                   <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
                       <div className="text-xs font-medium text-muted-foreground">Status</div>
@@ -1077,7 +1091,7 @@ export default function GamePage() {
                     <div className="space-y-1">
                       <div className="text-xs font-medium text-muted-foreground">Call card</div>
                       <div className="flex items-center gap-3">
-                        <div className="h-24 w-16 shadow-sm transition-transform hover:scale-105">
+                        <div className="h-20 w-14 shadow-sm transition-transform hover:scale-105 sm:h-24 sm:w-16">
                           {callCardDisplay ? (
                             <WhotCard
                               variant="face"
@@ -1116,7 +1130,7 @@ export default function GamePage() {
                   </div>
                 </div>
 
-                <div className="rounded-3xl border bg-white p-4 shadow-sm">
+                <div className="rounded-2xl border bg-white p-3 shadow-sm sm:rounded-3xl sm:p-4">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <div className="text-xs font-medium text-muted-foreground">Your hand</div>
@@ -1421,8 +1435,8 @@ export default function GamePage() {
               </div>
             </div>
           ) : (
-            <div className="flex min-h-0 flex-1 flex-col gap-4">
-              <div className="rounded-3xl border bg-white p-3 shadow-sm">
+            <div className="flex min-h-0 flex-1 flex-col gap-3 sm:gap-4">
+              <div className="rounded-2xl border bg-white p-3 shadow-sm sm:rounded-3xl">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <div className="text-xs font-medium text-muted-foreground">Other players</div>
@@ -1512,7 +1526,7 @@ export default function GamePage() {
                 ) : null}
               </div>
 
-              <div className="rounded-3xl border bg-white p-3 shadow-sm flex-shrink-0">
+              <div className="rounded-2xl border bg-white p-3 shadow-sm flex-shrink-0 sm:rounded-3xl">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <div className="text-xs font-medium text-muted-foreground">Table</div>
@@ -1525,11 +1539,11 @@ export default function GamePage() {
                   </div>
                 </div>
 
-                <div className="mt-3 grid grid-cols-2 gap-3">
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
                   <div className="space-y-1">
                     <div className="text-xs font-medium text-muted-foreground">Call card</div>
                     <div className="flex items-center gap-3">
-                      <div className="h-24 w-16 shadow-sm transition-transform hover:scale-105">
+                      <div className="h-20 w-14 shadow-sm transition-transform hover:scale-105 sm:h-24 sm:w-16">
                         {callCardDisplay ? (
                           <WhotCard
                             variant="face"
@@ -1600,7 +1614,7 @@ export default function GamePage() {
                 </div>
               </div>
 
-              <div className="flex min-h-0 flex-1 flex-col rounded-3xl border bg-white p-4 shadow-sm">
+              <div className="flex min-h-0 flex-1 flex-col rounded-2xl border bg-white p-3 shadow-sm sm:rounded-3xl sm:p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <div className="text-xs font-medium text-muted-foreground">Your hand</div>
