@@ -47,7 +47,11 @@ The application features two distinct UI modes which can be toggled via the floa
 
 ## Smart Contracts
 
-The game logic is powered by the `WhotManager` contract, which orchestrates:
--   Game creation and lobbies.
--   Drawing encrypted hands from the Shuffle Service.
--   Turn management and move verification.
+This is the frontend UI for the [card-game](https://github.com/0xnonso/card-game) smart contracts.
+
+The game logic is powered by the on-chain contracts:
+-   **CardEngine**: Core game engine handling game state, turns, and move execution.
+-   **WhotManager**: Orchestrates game creation, lobbies, and ruleset management.
+-   **TrustedShuffleService**: Provides verifiable on-chain card shuffling.
+
+For contract deployment, configuration, and development, see the [card-game repository](https://github.com/0xnonso/card-game).
