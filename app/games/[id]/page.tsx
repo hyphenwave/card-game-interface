@@ -328,7 +328,7 @@ const MarketDeckFan = ({
       onClick={onDraw}
       disabled={!canDraw}
       title={canDraw ? "Draw from market" : "Draw on your turn"}
-      className={`group relative h-20 w-24 transition sm:h-24 sm:w-28 ${
+      className={`group relative h-20 w-24 -translate-y-2 transition sm:h-24 sm:w-28 ${
         canDraw ? "cursor-pointer" : "cursor-not-allowed opacity-60"
       }`}
     >
@@ -1113,7 +1113,7 @@ export default function GamePage() {
                     </div>
                     <div className="space-y-1">
                       <div className="text-xs font-medium text-muted-foreground">Market deck</div>
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 pt-1">
                         <MarketDeckFan
                           count={marketSize(gameData.marketDeckMap)}
                           canDraw={canDraw}
@@ -1302,7 +1302,7 @@ export default function GamePage() {
                         return (
                           <div
                             key={`fun-player-${player.index}`}
-                            className={`rounded-2xl border p-3 transition-colors ${
+                            className={`relative rounded-2xl border p-3 transition-colors ${
                               isCurrent
                                 ? "border-primary/40 bg-white ring-2 ring-primary/20"
                                 : "border-slate-200 bg-white"
@@ -1325,9 +1325,11 @@ export default function GamePage() {
                             <div className="mt-1 text-xs text-muted-foreground">
                               {isEmpty ? "Waiting for player..." : formatAddr(player.addr)}
                             </div>
-                            <div className="mt-3 flex items-center justify-between">
-                              <CardFan count={player.cards.length} faded={isEmpty} />
-                              <div className="text-xs font-medium text-muted-foreground">
+                            <div className="mt-2 flex flex-col gap-2 sm:mt-3">
+                              <div className="-translate-y-3 flex-shrink-0">
+                                <CardFan count={player.cards.length} faded={isEmpty} />
+                              </div>
+                              <div className="text-xs font-semibold text-foreground sm:absolute sm:bottom-3 sm:right-3">
                                 {player.cards.length} cards
                               </div>
                             </div>
@@ -1474,7 +1476,7 @@ export default function GamePage() {
                       return (
                         <div
                           key={`fun-player-${player.index}`}
-                          className={`min-w-[160px] sm:min-w-0 flex-shrink-0 snap-center rounded-2xl border p-3 transition-colors ${
+                          className={`min-w-[160px] sm:min-w-0 flex-shrink-0 snap-center rounded-2xl border p-3 transition-colors relative ${
                             isCurrent
                               ? "border-primary/40 bg-white ring-2 ring-primary/20"
                               : "border-slate-200 bg-white"
@@ -1500,9 +1502,11 @@ export default function GamePage() {
                           <div className="mt-1 text-xs text-muted-foreground truncate">
                             {isEmpty ? "Waiting..." : formatAddr(player.addr)}
                           </div>
-                          <div className="mt-3 flex items-center justify-between">
-                            <CardFan count={player.cards.length} faded={isEmpty} />
-                            <div className="text-xs font-medium text-muted-foreground whitespace-nowrap">
+                          <div className="mt-2 flex flex-col gap-2 sm:mt-3">
+                            <div className="-translate-y-3 flex-shrink-0">
+                              <CardFan count={player.cards.length} faded={isEmpty} />
+                            </div>
+                            <div className="text-xs font-semibold text-foreground whitespace-nowrap sm:absolute sm:bottom-3 sm:right-3">
                               {player.cards.length} cards
                             </div>
                           </div>
@@ -1565,7 +1569,7 @@ export default function GamePage() {
                   </div>
                   <div className="space-y-1">
                     <div className="text-xs font-medium text-muted-foreground">Market deck</div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 pt-1">
                       <MarketDeckFan
                         count={marketSize(gameData.marketDeckMap)}
                         canDraw={canDraw}
