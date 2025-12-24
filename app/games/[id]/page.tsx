@@ -34,6 +34,7 @@ import { relayGameAction } from "@/lib/relay"
 import { getFheKeypair, saveFheKeypair } from "@/lib/fheKeys"
 import { exportBurner, onBurnerUpdated } from "@/lib/burner"
 import { clearPendingCommit, loadPendingCommit, savePendingCommit } from "@/lib/commitmentCache"
+import { isCacheValid, loadCachedHand, saveCachedHand } from "@/lib/handCache"
 import { useRuleEnforcement } from "@/lib/uiSettings"
 
 const ACTIONS = [
@@ -462,11 +463,33 @@ export default function GamePage() {
   const wishAction = pendingAction ?? action
   const shouldShowWishShape = Boolean(wishAction === 0 && selectedCard?.shape === "Whot")
 
+  // Load cached hand on mount if valid
   useEffect(() => {
-    setMyHand(null)
-    setHandError(null)
-    setHandUpdatedAt(null)
-  }, [me?.deckMap?.toString(), gameData?.marketDeckMap?.toString(), address])
+    if (!address || !gameId || !me) return
+    if (myHand?.length) return // Already have hand
+    const cached = loadCachedHand(chainId, gameKey, address)
+    if (!cached) return
+    // Check if cache matches current on-chain handles
+    if (!isCacheValid(cached, me.hand0, me.hand1)) return
+    try {
+      const clear0 = BigInt(cached.clear0)
+      const clear1 = BigInt(cached.clear1)
+      const cards = decodeHandCards(me.deckMap, clear0, clear1)
+      setMyHand(cards)
+      setHandUpdatedAt(parseInt(cached.updatedAt.toString(), 10))
+      setLastHandSignature(`${me.hand0.toString()}-${me.hand1.toString()}`)
+    } catch {
+      // Invalid cache, ignore
+    }
+  }, [address, chainId, gameId, gameKey, me, myHand?.length])
+
+  // When deckMap changes, mark hand as potentially stale
+  // BUT don't clear myHand - let cache logic decide if we need to re-decrypt
+  useEffect(() => {
+    // Mark hand as stale so UI shows refresh option
+    // The cache will be re-validated when user reveals or on auto-reveal
+    setHandStale(true)
+  }, [me?.deckMap?.toString(), me?.hand0?.toString(), me?.hand1?.toString(), address])
 
   useEffect(() => {
     if (!address || !gameId) return
@@ -515,6 +538,26 @@ export default function GamePage() {
       toast.error("Connect your wallet to decrypt your hand")
       return
     }
+    
+    // Check cache first - if valid, use cached data without decrypt call
+    const cached = loadCachedHand(chainId, gameKey, address)
+    if (cached && isCacheValid(cached, me.hand0, me.hand1)) {
+      try {
+        const clear0 = BigInt(cached.clear0)
+        const clear1 = BigInt(cached.clear1)
+        const cards = decodeHandCards(me.deckMap, clear0, clear1)
+        setMyHand(cards)
+        setHandUpdatedAt(Date.now())
+        setHandStale(false)
+        setHandError(null)
+        setLastHandSignature(`${me.hand0.toString()}-${me.hand1.toString()}`)
+        return // Successfully restored from cache, no decrypt needed
+      } catch {
+        // Cache corrupted, fall through to decrypt
+      }
+    }
+    
+    // Cache miss or invalid - need to decrypt
     if (fheStatus !== "ready") {
       toast.error("FHE relayer not ready", {
         description: fheError?.message,
@@ -564,6 +607,14 @@ export default function GamePage() {
       setHandUpdatedAt(Date.now())
       setHandStale(false)
       setLastHandSignature(`${me.hand0.toString()}-${me.hand1.toString()}`)
+      // Cache decrypted values to avoid re-decrypt on reload
+      saveCachedHand(chainId, gameKey, address, {
+        hand0: me.hand0.toString(),
+        hand1: me.hand1.toString(),
+        clear0: clear0.toString(),
+        clear1: clear1.toString(),
+        updatedAt: Date.now(),
+      })
     } catch (err) {
       const message = err instanceof Error ? err.message : "Hand decrypt failed"
       setHandError(message)
@@ -580,6 +631,7 @@ export default function GamePage() {
     me,
     fheStatus,
     chainId,
+    gameKey,
     contracts.cardEngine,
     generateKeypair,
     saveFheKeypair,
