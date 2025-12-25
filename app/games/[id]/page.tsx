@@ -35,7 +35,7 @@ import { relayGameAction } from "@/lib/relay"
 import { getFheKeypair, saveFheKeypair } from "@/lib/fheKeys"
 import { exportBurner, onBurnerUpdated } from "@/lib/burner"
 import { clearPendingCommit, loadPendingCommit, savePendingCommit } from "@/lib/commitmentCache"
-import { isCacheValid, loadCachedHand, saveCachedHand } from "@/lib/handCache"
+import { isCacheValid, loadCachedHand, saveCachedHand, saveCachedCommit, loadCachedCommit, clearCachedCommit } from "@/lib/handCache"
 import { useRuleEnforcement } from "@/lib/uiSettings"
 
 const ACTIONS = [
@@ -527,6 +527,7 @@ export default function GamePage() {
         setPendingAction(null)
       }
       clearPendingCommit(chainId, gameKey, address)
+      clearCachedCommit(chainId, gameKey, address)
     }
   }, [address, chainId, gameId, gameKey, loadingCommitment, hasCommittedOnChain, pendingProofData, pendingCardIndex, pendingAction])
 
@@ -733,12 +734,49 @@ export default function GamePage() {
         throw new Error("MoveCommitted event not found")
       }
 
-      // 2. Decrypt and Generate Proof
-      const decrypted = await publicDecrypt([encryptedCard])
+      // Cache the commit data for proof regeneration (no RPC lookup needed later)
+      if (address) {
+        saveCachedCommit(chainId, gameKey, address, {
+          encryptedCard,
+          cardIndex: Number(committedIdx),
+          updatedAt: Date.now(),
+        })
+      }
+
+      // 2. Decrypt and Generate Proof (with retry logic for FHE relayer reliability)
+      console.log("[Proof Gen] Starting decryption for handle:", encryptedCard)
+      let decrypted: Awaited<ReturnType<typeof publicDecrypt>> | null = null
+      let lastDecryptError: Error | null = null
+      
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          console.log(`[Proof Gen] Decrypt attempt ${attempt}/3...`)
+          decrypted = await publicDecrypt([encryptedCard])
+          console.log("[Proof Gen] Decryption succeeded:", {
+            hasProof: !!decrypted?.decryptionProof,
+            hasClearValues: !!decrypted?.abiEncodedClearValues,
+          })
+          break // Success, exit retry loop
+        } catch (decryptErr) {
+          lastDecryptError = decryptErr instanceof Error ? decryptErr : new Error(String(decryptErr))
+          console.warn(`[Proof Gen] Decrypt attempt ${attempt} failed:`, lastDecryptError.message)
+          if (attempt < 3) {
+            // Wait before retry (exponential backoff: 500ms, 1000ms)
+            await new Promise(resolve => setTimeout(resolve, attempt * 500))
+          }
+        }
+      }
+
+      if (!decrypted) {
+        throw new Error(`Decryption failed after 3 attempts: ${lastDecryptError?.message ?? "Unknown error"}`)
+      }
+
       const indexValue = Number(committedIdx)
       if (!Number.isFinite(indexValue) || indexValue < 0 || indexValue > 255) {
         throw new Error("Committed card index out of range")
       }
+      
+      console.log("[Proof Gen] Encoding proof data...")
       const proofData = encodeAbiParameters(
         [
           { type: "bytes" },
@@ -748,6 +786,7 @@ export default function GamePage() {
         ],
         [decrypted.decryptionProof, encryptedCard, decrypted.abiEncodedClearValues, indexValue],
       ) as `0x${string}`
+      console.log("[Proof Gen] Proof encoded successfully, length:", proofData.length)
       
       setPendingProofData(proofData)
       setPendingCardIndex(indexValue)
@@ -804,6 +843,7 @@ export default function GamePage() {
       setPendingAction(null)
       if (address) {
         clearPendingCommit(chainId, gameKey, address)
+        clearCachedCommit(chainId, gameKey, address)
       }
       if (myHand?.length) {
         setMyHand(null)
@@ -821,7 +861,7 @@ export default function GamePage() {
   // Regenerate proof from existing commitment (no new transaction needed)
   // Regenerate proof from existing commitment (no new transaction needed)
   const handleRegenerateProof = async () => {
-    if (!gameId || !publicClient || !address) return
+    if (!gameId || !address) return
     if (!isMyTurn) {
       toast.error("Can only regenerate proof for your own turn")
       return
@@ -834,57 +874,31 @@ export default function GamePage() {
       toast.error("FHE relayer not ready", { description: fheError?.message })
       return
     }
+
+    // Try to load commit data from local cache first (no RPC needed!)
+    const cachedCommit = loadCachedCommit(chainId, gameKey, address)
+    if (!cachedCommit) {
+      toast.error("Commit data not found", {
+        description: "The encrypted card handle is not cached. Try breaking and re-committing.",
+        duration: 6000,
+      })
+      return
+    }
+
     setIsDecrypting(true)
     try {
-      // Fetch the MoveCommitted event from chain
-      // ABI: event MoveCommitted(uint256 indexed gameId, euint8 cardToCommit, uint256 cardIndex);
-      const currentBlock = await publicClient.getBlockNumber()
-      // Alchemy Free Tier limits block range. We assume the game started reasonably recently.
-      const fromBlock = currentBlock > 50000n ? currentBlock - 50000n : 0n // Look back ~50k blocks
+      const { encryptedCard, cardIndex } = cachedCommit
+      console.log("[Regenerate Proof] Using cached commit data:", { encryptedCard, cardIndex })
 
-      const logs = await publicClient.getLogs({
-        address: contracts.cardEngine as Address,
-        event: {
-          type: "event",
-          name: "MoveCommitted",
-          inputs: [
-            { indexed: true, name: "gameId", type: "uint256" },
-            { indexed: false, name: "cardToCommit", type: "uint256" },
-            { indexed: false, name: "cardIndex", type: "uint256" },
-          ],
-        },
-        args: { gameId },
-        fromBlock,
-        toBlock: "latest",
-      })
-      // Get the most recent commitment for this game
-      const latestLog = logs[logs.length - 1]
-      if (!latestLog) {
-        throw new Error("MoveCommitted event not found. Try committing again or checking block range.")
-      }
+      // Decrypt using the cached handle
+      const decrypted = await publicDecrypt([encryptedCard])
       
-      const encryptedCardHandle = latestLog.args.cardToCommit as bigint
-      const committedIdx = latestLog.args.cardIndex as bigint
-      
-      console.log("Regenerate Proof - Handle:", encryptedCardHandle, "Index:", committedIdx)
-
-      if (encryptedCardHandle === undefined || committedIdx === undefined) {
-        throw new Error("Invalid commitment event data")
-      }
-
-      // Convert handle to Uint8Array (32 bytes) for publicDecrypt
-      const encryptedCardBytes = toBytes(encryptedCardHandle, { size: 32 })
-      const decrypted = await publicDecrypt([encryptedCardBytes])
-      
-      const indexValue = Number(committedIdx)
+      const indexValue = cardIndex
       if (!Number.isFinite(indexValue) || indexValue < 0 || indexValue > 255) {
         throw new Error("Committed card index out of range")
       }
       
-      // Convert handle to hex string for proof encoding (bytes32)
-      const encryptedCardHex = toHex(encryptedCardHandle, { size: 32 })
-      
-      // encryptedCardHex is bytes32 hex string, perfect for encoding
+      // encryptedCard is already a hex string from cache
       const proofData = encodeAbiParameters(
         [
           { type: "bytes" },
@@ -892,7 +906,7 @@ export default function GamePage() {
           { type: "bytes" },
           { type: "uint8" },
         ],
-        [decrypted.decryptionProof, encryptedCardHex, decrypted.abiEncodedClearValues, indexValue],
+        [decrypted.decryptionProof, encryptedCard as `0x${string}`, decrypted.abiEncodedClearValues, indexValue],
       ) as `0x${string}`
       
       setPendingProofData(proofData)

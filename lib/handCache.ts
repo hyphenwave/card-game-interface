@@ -72,3 +72,62 @@ export const isCacheValid = (cache: CachedHand, hand0: bigint, hand1: bigint): b
         return false
     }
 }
+
+// Commit data cache - stores the encrypted card handle for proof regeneration
+export type CachedCommit = {
+    encryptedCard: string // hex string of the encrypted card handle
+    cardIndex: number
+    updatedAt: number
+}
+
+const COMMIT_CACHE_PREFIX = "whot-commit-cache"
+
+const buildCommitKey = (chainId: number, gameId: string, address: string) =>
+    `${COMMIT_CACHE_PREFIX}:${chainId}:${gameId}:${address.toLowerCase()}`
+
+export const loadCachedCommit = (chainId: number, gameId: string, address: string): CachedCommit | null => {
+    if (typeof window === "undefined") return null
+    if (!address) return null
+    const key = buildCommitKey(chainId, gameId, address)
+    try {
+        const raw = window.localStorage.getItem(key)
+        if (!raw) return null
+        const parsed = JSON.parse(raw) as CachedCommit
+        if (!parsed?.encryptedCard || parsed?.cardIndex === undefined) return null
+        // Cache expires after 1 hour (commits should be executed soon)
+        if (Date.now() - parsed.updatedAt > 60 * 60 * 1000) {
+            window.localStorage.removeItem(key)
+            return null
+        }
+        return parsed
+    } catch {
+        return null
+    }
+}
+
+export const saveCachedCommit = (
+    chainId: number,
+    gameId: string,
+    address: string,
+    data: CachedCommit,
+) => {
+    if (typeof window === "undefined") return
+    if (!address) return
+    const key = buildCommitKey(chainId, gameId, address)
+    try {
+        window.localStorage.setItem(key, JSON.stringify(data))
+    } catch {
+        // ignore storage failures
+    }
+}
+
+export const clearCachedCommit = (chainId: number, gameId: string, address: string) => {
+    if (typeof window === "undefined") return
+    if (!address) return
+    const key = buildCommitKey(chainId, gameId, address)
+    try {
+        window.localStorage.removeItem(key)
+    } catch {
+        // ignore storage failures
+    }
+}
