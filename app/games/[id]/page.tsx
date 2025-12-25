@@ -803,8 +803,13 @@ export default function GamePage() {
   }
 
   // Regenerate proof from existing commitment (no new transaction needed)
+  // Regenerate proof from existing commitment (no new transaction needed)
   const handleRegenerateProof = async () => {
     if (!gameId || !publicClient || !address) return
+    if (!isMyTurn) {
+      toast.error("Can only regenerate proof for your own turn")
+      return
+    }
     if (!hasCommittedOnChain) {
       toast.error("No commitment found on-chain")
       return
@@ -815,7 +820,9 @@ export default function GamePage() {
     }
     setIsDecrypting(true)
     try {
-      // Fetch the MoveCommitted event to get encrypted card and index
+      // Fetch the MoveCommitted event from chain
+      // ABI: event MoveCommitted(uint256 indexed gameId, euint8 cardToCommit, uint256 cardIndex);
+      // euint8 is a handle (uint256)
       const logs = await publicClient.getLogs({
         address: contracts.cardEngine as Address,
         event: {
@@ -823,8 +830,8 @@ export default function GamePage() {
           name: "MoveCommitted",
           inputs: [
             { indexed: true, name: "gameId", type: "uint256" },
-            { indexed: false, name: "cardToCommit", type: "bytes32" },
-            { indexed: false, name: "cardIndex", type: "uint8" },
+            { indexed: false, name: "cardToCommit", type: "uint256" },
+            { indexed: false, name: "cardIndex", type: "uint256" },
           ],
         },
         args: { gameId },
@@ -836,17 +843,27 @@ export default function GamePage() {
       if (!latestLog) {
         throw new Error("MoveCommitted event not found")
       }
-      const encryptedCard = latestLog.args.cardToCommit as `0x${string}`
-      const committedIdx = latestLog.args.cardIndex as number
-      if (!encryptedCard || committedIdx === undefined) {
+      
+      const encryptedCardHandle = latestLog.args.cardToCommit as bigint
+      const committedIdx = latestLog.args.cardIndex as bigint
+      
+      if (encryptedCardHandle === undefined || committedIdx === undefined) {
         throw new Error("Invalid commitment event data")
       }
-      // Decrypt and generate proof
-      const decrypted = await publicDecrypt([encryptedCard])
+
+      // Convert handle to hex string for publicDecrypt and proof encoding
+      const encryptedCardHex = toHex(encryptedCardHandle, { size: 32 })
+
+      // Decrypt using the handle (fhevm expects hex string handle)
+      const decrypted = await publicDecrypt([encryptedCardHex])
+      
       const indexValue = Number(committedIdx)
       if (!Number.isFinite(indexValue) || indexValue < 0 || indexValue > 255) {
         throw new Error("Committed card index out of range")
       }
+      
+      // encryptedCardHex is already 32 bytes hex string, suitable for bytes32 encoding
+      
       const proofData = encodeAbiParameters(
         [
           { type: "bytes" },
@@ -854,8 +871,9 @@ export default function GamePage() {
           { type: "bytes" },
           { type: "uint8" },
         ],
-        [decrypted.decryptionProof, encryptedCard, decrypted.abiEncodedClearValues, indexValue],
+        [decrypted.decryptionProof, encryptedCardHex, decrypted.abiEncodedClearValues, indexValue],
       ) as `0x${string}`
+      
       setPendingProofData(proofData)
       setPendingCardIndex(indexValue)
       setPendingAction(action) // Use current action selection
@@ -869,6 +887,7 @@ export default function GamePage() {
       }
       toast.success("Proof regenerated", { description: "You can now execute your move." })
     } catch (err) {
+      console.error(err)
       toast.error("Failed to regenerate proof", { description: describeViemError(err) })
     } finally {
       setIsDecrypting(false)

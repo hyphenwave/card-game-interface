@@ -428,7 +428,7 @@ export function FunGameView({
                       {executePending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                       Execute {pendingActionLabel}
                     </Button>
-                    {needsProofRegeneration ? (
+                    {needsProofRegeneration && isMyTurn ? (
                       <Button
                         size="sm"
                         variant="secondary"
@@ -947,7 +947,7 @@ export function FunGameView({
                       {executePending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                       Execute {pendingActionLabel}
                     </Button>
-                    {needsProofRegeneration ? (
+                    {needsProofRegeneration && isMyTurn ? (
                       <Button
                         size="sm"
                         variant="secondary"
