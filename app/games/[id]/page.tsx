@@ -940,8 +940,33 @@ export default function GamePage() {
         return
       }
     }
+    
+    // Reset state for new selection
+    setWishShape("")
+    setCardIndex(index.toString())
     setAction(nextAction)
+
+    // For Whot cards, wait for shape selection before committing
+    if (nextAction === 0) {
+      const card = myHand?.find((c) => c.index === index)
+      if (card?.shape === "Whot") {
+        return
+      }
+    }
+
     await handleCommit(BigInt(index), nextAction)
+  }
+
+  const handleShapeSelected = async (shape: string) => {
+    setWishShape(shape)
+    if (cardIndex) {
+      await handleCommit(BigInt(cardIndex), action)
+    }
+  }
+
+  const handleCancelSelection = () => {
+    setCardIndex("")
+    setWishShape("")
   }
 
   const handleDrawFromMarket = async () => {
@@ -1150,6 +1175,8 @@ export default function GamePage() {
           handleRegenerateProof={handleRegenerateProof}
           handleExecute={handleExecute}
           handleBreakCommitment={handleBreakCommitment}
+          handleShapeSelected={handleShapeSelected}
+          handleCancelSelection={handleCancelSelection}
           joinHandler={joinHandler}
           startHandler={startHandler}
           joinDisabled={joinDisabled}

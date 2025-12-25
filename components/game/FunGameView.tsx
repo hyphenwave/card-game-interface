@@ -66,6 +66,8 @@ type FunGameViewProps = {
   handleRegenerateProof: () => void
   handleExecute: (actionOverride?: number) => void
   handleBreakCommitment: () => void
+  handleShapeSelected: (shape: string) => void
+  handleCancelSelection: () => void
   joinHandler: () => void
   startHandler: () => void
   joinDisabled: boolean
@@ -142,6 +144,8 @@ export function FunGameView({
   handleRegenerateProof,
   handleExecute,
   handleBreakCommitment,
+  handleShapeSelected,
+  handleCancelSelection,
   joinHandler,
   startHandler,
   joinDisabled,
@@ -345,7 +349,7 @@ export function FunGameView({
                     <div className="text-xs font-medium text-muted-foreground">Whot wish</div>
                     <button
                       type="button"
-                      onClick={() => setAction(2)}
+                      onClick={handleCancelSelection}
                       className="rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                     >
                       <X className="h-4 w-4" />
@@ -360,7 +364,7 @@ export function FunGameView({
                         key={shape}
                         size="sm"
                         variant={wishShape === idx.toString() ? "secondary" : "outline"}
-                        onClick={() => setWishShape(idx.toString())}
+                        onClick={() => handleShapeSelected(idx.toString())}
                       >
                         {shape}
                       </Button>
@@ -865,7 +869,7 @@ export function FunGameView({
                   <div className="text-xs font-medium text-muted-foreground">Whot wish</div>
                   <button
                     type="button"
-                    onClick={() => setAction(2)}
+                    onClick={handleCancelSelection}
                     className="rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                   >
                     <X className="h-4 w-4" />
@@ -880,7 +884,7 @@ export function FunGameView({
                       key={shape}
                       size="sm"
                       variant={wishShape === idx.toString() ? "secondary" : "outline"}
-                      onClick={() => setWishShape(idx.toString())}
+                      onClick={() => handleShapeSelected(idx.toString())}
                     >
                       {shape}
                     </Button>
